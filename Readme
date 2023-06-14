@@ -1,0 +1,31 @@
+
+# Xero Voiceassistat
+
+A simple voice assistant, equipped with a webserver for controling the raspberry pi remotly. It can do a few things including playing music, and setting an alarm. It structured and easily expandable. 
+
+
+
+
+## Features
+
+-  Get the time
+-  Get the date
+-  Stop Playing music
+-  Radio player
+-  Play Music via Youtube
+-  Search in Wikipedia
+-  Set an Alarm
+
+
+## TODO
+
+-  GPT support for questions that are outside the predefined parameters
+-  Smart Home functionality
+
+
+
+
+## Feedback
+
+If you have any feedback, please reach out to us at abstractdev7@gmail.com
+

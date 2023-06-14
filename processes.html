@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Process Manager</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</head>
+<style>
+    #search-bar {
+        border-radius: 0;
+    }
+
+    #search-btn {
+        border-radius: 0;
+    }
+
+    .sort-btn {
+        background-color: transparent;
+        border: none;
+        color: #333;
+        cursor: pointer;
+        font-size: 16px;
+        margin-left: 5px;
+        outline: none;
+        padding: 0;
+        text-align: center;
+        width: 20px;
+        display: table;
+    }
+
+    .sort-btn:hover {
+        color: #666;
+    }
+
+    .sort-btn:focus {
+        color: #666;
+    }
+
+    .sort-btn:active {
+        color: #999;
+    }
+
+    .sort-btn.asc::after {
+        content: " ▲";
+    }
+
+    .sort-btn.desc::after {
+        content: " ▼";
+    }
+
+    .box {
+        width: 100%;
+        padding-right: 15px;
+        padding-left: 15px;
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    /* reduce margin and padding for small screens */
+    @media only screen and (max-width: 600px) {
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        th:nth-child(5),
+        th:nth-child(6),
+        th:nth-child(7),
+        td:nth-child(5),
+        td:nth-child(6),
+        td:nth-child(7) {
+            display: none;
+        }
+    }
+
+    /* make font size bigger for small screens */
+    @media only screen and (max-width: 600px) {
+        body {
+            font-size: 18px;
+        }
+
+        #processTable td:first-child {
+            border-left: none;
+        }
+
+        .box {
+            margin-left: 0;
+            margin-right: 0;
+        }
+    }
+</style>
+
+<body>
+    <div class="box">
+        <h1>Process Manager</h1>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">CPU Usage</h5>
+                        <p class="card-text">
+                            <span id="cpu">{{ cpu_percent }}</span>%
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">RAM Usage</h5>
+                        <p class="card-text">
+                            <span id="ram">{{ mempercent }} %</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if message %}
+        <div class="alert alert-primary" role="alert">
+            {{ message }}
+        </div>
+        {% endif %}
+        <div class="input-group mb-3 mt-2">
+            <input type="text" class="form-control" placeholder="Search for a process..." onkeyup="search()"
+                aria-label="Search" aria-describedby="button-addon2" id="searchInput">
+        </div>
+        <div class="form-check mb-3" id="expertmodeswitch">
+            <input class="form-check-input" type="checkbox" id="expertMode" onclick="toggleExpertMode()">
+            <label class="form-check-label" for="expertMode">
+                Expert mode
+            </label>
+        </div>
+        <div id="processTableWrapper">
+            <table class="table" id="processTable">
+                <thead>
+                    <tr>
+                        <th>User <button class="sort-btn" onclick="sortTable(0, 'asc')">▲</button><button
+                                class="sort-btn" onclick="sortTable(0, 'desc')">▼</button></th>
+                        <th>PID <button class="sort-btn" onclick="sortTable(1, 'asc')">▲</button><button
+                                class="sort-btn" onclick="sortTable(1, 'desc')">▼</button></th>
+                        <th>CPU Usage (%) <button class="sort-btn" onclick="sortTable(2, 'asc')">▲</button><button
+                                class="sort-btn" onclick="sortTable(2, 'desc')">▼</button></th>
+                        <th>RAM Usage (%) <button class="sort-btn" onclick="sortTable(3, 'asc')">▲</button><button
+                                class="sort-btn" onclick="sortTable(3, 'desc')">▼</button></th>
+                        <th>Virtual Memory Size (KiB) <button class="sort-btn"
+                                onclick="sortTable(4, 'asc')">▲</button><button class="sort-btn"
+                                onclick="sortTable(4, 'desc')">▼</button></th>
+                        <th>Resident Set Size (KiB) <button class="sort-btn"
+                                onclick="sortTable(5, 'asc')">▲</button><button class="sort-btn"
+                                onclick="sortTable(5, 'desc')">▼</button></th>
+                        <th>TTY <button class="sort-btn" onclick="sortTable(6, 'asc')">▲</button><button
+                                class="sort-btn" onclick="sortTable(6, 'desc')">▼</button></th>
+                        <th>Status <button class="sort-btn" onclick="sortTable(7, 'asc')">▲</button><button
+                                class="sort-btn" onclick="sortTable(7, 'desc')">▼</button></th>
+                        <th>Start Time <button class="sort-btn" onclick="sortTable(8, 'asc')">▲</button><button
+                                class="sort-btn" onclick="sortTable(8, 'desc')">▼</button></th>
+                        <th>Time Elapsed <button class="sort-btn" onclick="sortTable(9, 'asc')">▲</button><button
+                                class="sort-btn" onclick="sortTable(9, 'desc')">▼</button></th>
+                        <th>Command <button class="sort-btn" onclick="sortTable(10, 'asc')">▲</button><button
+                                class="sort-btn" onclick="sortTable(10, 'desc')">▼</button></th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for process in processes %}
+                    <tr>
+                        <td>{{ process.user }}</td>
+                        <td>{{ process.pid }}</td>
+                        <td>{{ process.cpu }}</td>
+                        <td>{{ process.mem }}</td>
+                        <td>{{ process.vsz }}</td>
+                        <td>{{ process.rss }}</td>
+                        <td>{{ process.tty }}</td>
+                        <td>{{ process.stat }}</td>
+                        <td>{{ process.start }}</td>
+                        <td>{{ process.time }}</td>
+                        <td>{{ process.command }}</td>
+                        <td>
+                            <form method="post" action="{{ url_for('processes') }}">
+                                <input type="hidden" name="pid" value="{{ process.pid }}">
+                                <button type="submit" name="action" value="kill"
+                                    class="btn btn-danger btn-sm">Kill</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <form action="/start_process/<process_name>" method="post" class="form-inline">
+            <div class="form-group mt-2">
+                <label for="process_name" class="mr-2">Process Name:</label>
+                <input type="text" id="process_name" name="process_name" class="form-control mr-2">
+                <button type="submit" class="btn btn-primary">Start Process</button>
+            </div>
+        </form>
+    </div>
+</body>
+<script>
+    function search() {
+        let input = document.getElementById('searchInput');
+        let filter = input.value.toUpperCase();
+        let table = document.getElementById('processTable');
+        let tr = table.getElementsByTagName('tr');
+
+        for (let i = 0; i < tr.length; i++) {
+            let td = tr[i].getElementsByTagName('td');
+            for (let j = 0; j < td.length; j++) {
+                let txtValue = td[j].textContent || td[j].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                    break;
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    function startProcess(processName) {
+        $.ajax({
+            url: "{{ url_for('start_process', process_name='') }}" + processName,
+            success: function (data) {
+                alert(data);
+            },
+            error: function () {
+                console.log('Error starting process.');
+            }
+        });
+    }
+
+    // Global variable to store the sorting state of the table
+    var sorting = {
+        column: 0,
+        order: 'asc'
+    };
+
+    function sortTable(n, order) {
+        var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        table = document.getElementById("processTable");
+        switching = true;
+        dir = (order == 'asc') ? 1 : -1;
+
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+
+                if (dir == 1) {
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else if (dir == -1) {
+                    if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount++;
+            } else {
+                if (switchcount == 0 && dir == 1) {
+                    dir = -1;
+                    switching = true;
+                }
+            }
+        }
+    }
+    function toggleExpertMode() {
+        var checkBox = document.getElementById("expertMode");
+        var tableColumns = document.querySelectorAll("#processTable th:nth-child(5), #processTable th:nth-child(6), #processTable th:nth-child(7), #processTable td:nth-child(5), #processTable td:nth-child(6), #processTable td:nth-child(7)");
+
+        var screenWidth = window.innerWidth;
+        var expertMode = document.getElementById("expertMode");
+        if (screenWidth < 576 || checkBox.checked) {
+            tableColumns.forEach(function (column) {
+                column.style.display = "table-cell";
+            });
+        } else {
+            tableColumns.forEach(function (column) {
+                column.style.display = "none";
+            });
+        }
+    }
+    toggleExpertMode();
+
+
+</script>
+<script>
+    $(document).ready(function () {
+        $('#searchBtn').click(function () {
+            var searchTerm = $('#searchInput').val().toLowerCase();
+            $('tbody tr').each(function () {
+                var currentRow = $(this);
+
+                if (currentRow.text().toLowerCase().indexOf(searchTerm) === -1) {
+                    currentRow.hide();
+                } else {
+                    currentRow.show();
+                }
+            });
+        });
+
+        $('#searchInput').on('keyup', function (event) {
+            if (event.keyCode === 13) {
+                $('#searchBtn').click();
+            }
+        });
+    });
+</script>
+
+</html>

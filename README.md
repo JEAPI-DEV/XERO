@@ -1,2 +1,0 @@
-# XERO
- XERO Voiceassistant

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Voice Assistant Web Interface</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+    <style>
+      body {
+        padding: 20px;
+      }
+      .card {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+      .my-2 {
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="card-body">
+        <h1 class="card-title">Voice Assistant Web Interface</h1>
+        {% if voice_assistant_status == 'Running' %}
+        <p class="card-text">Voice Assistant is currently running.</p>
+        {% elif voice_assistant_status == 'Stopped' %}
+        <p class="card-text">Voice Assistant is currently stopped.</p>
+        {% else %}
+        <p class="card-text">Voice Assistant status is unknown.</p>
+        {% endif %}
+        <form method="post" action="/start" class="my-2">
+          <button class="btn btn-primary btn-block" type="submit">Start Voice Assistant</button>
+        </form>
+        <form method="post" action="/stop" class="my-2">
+          <button class="btn btn-danger btn-block" type="submit">Stop Voice Assistant</button>
+        </form>
+        <form method="post" action="/restart" class="my-2">
+          <button class="btn btn-warning btn-block" type="submit">Restart Voice Assistant</button>
+        </form>
+        <a href="/processes" class="card-link">View Running Processes</a>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
+  </body>
+</html>
